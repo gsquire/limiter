@@ -1,5 +1,7 @@
 # limiter
 
+[![Build Status](https://travis-ci.org/gsquire/limiter.svg?branch=master)](https://travis-ci.org/gsquire/limiter)
+
 This is an example of `BeforeMiddleware` for the [Iron](https://github.com/iron/iron) framework.  It limits the request body size
 by checking first the Content-Length header, then the size of the payload. The response is either
 an HTTP 413 or it continues down the chain.
