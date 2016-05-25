@@ -60,18 +60,7 @@ impl BeforeMiddleware for BodyLimit {
         let length = req.headers.get::<ContentLength>();
         match length {
             Some(l) => { self.check_octets(l.0) },
-            // The only way this works is if the transfer-encoding is chunked.
-            // Otherwise the hyper library returns an empty reader which says it
-            // read zero bytes. See the HttpReader type in the hyper documentation.
-            None => {
-                let mut buf = Vec::new();
-                let read_ok = req.body.read_to_end(&mut buf);
-                if read_ok.is_ok() {
-                    self.check_octets(read_ok.unwrap() as u64)
-                } else {
-                    Err(IronError::new(read_ok.err().unwrap(), status::InternalServerError))
-                }
-            }
+            None => { self.check_octets(req.body.by_ref().bytes().count() as u64) }
         }
     }
 }
