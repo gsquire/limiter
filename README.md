@@ -10,7 +10,7 @@ Include this in your `Cargo.toml` file:
 
 ```sh
 [dependencies]
-limiter = "0.1.0"
+limiter = "0.1"
 ```
 
 ### Example
