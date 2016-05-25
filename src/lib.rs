@@ -64,3 +64,26 @@ impl BeforeMiddleware for BodyLimit {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::BodyLimit;
+
+    #[test]
+    fn test_default() {
+        let b = BodyLimit::new(0);
+        assert_eq!(b.max_body, super::DEFAULT_LIMIT);
+    }
+
+    #[test]
+    fn check_ok_response() {
+        let b = BodyLimit::new(5);
+        assert!(b.check_octets(5).is_ok());
+    }
+
+    #[test]
+    fn check_err_response() {
+        let b = BodyLimit::new(1);
+        assert!(b.check_octets(2).is_err());
+    }
+}
