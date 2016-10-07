@@ -2,7 +2,7 @@
 name = "limiter"
 version = "0.2.0"
 authors = ["Garrett Squire <garrettsquire@gmail.com>"]
-description = "Request body limiting for the Iron framework"
+description = "Request size limiting for the Iron framework"
 repository = "https://github.com/gsquire/limiter"
 keywords = ["iron", "http", "hyper"]
 license = "MIT"

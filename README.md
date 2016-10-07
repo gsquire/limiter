@@ -6,11 +6,14 @@ This is an example of `BeforeMiddleware` for the [Iron](https://github.com/iron/
 by checking first the Content-Length header, then the size of the payload. The response is either
 an HTTP 413 or it continues down the chain.
 
+It will also set an upper bound on the length of a URL which can be helpful in regular
+`GET` requests.
+
 Include this in your `Cargo.toml` file:
 
 ```sh
 [dependencies]
-limiter = "0.1"
+limiter = "0.2"
 ```
 
 ### Example
