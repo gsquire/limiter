@@ -21,14 +21,14 @@ extern crate limiter;
 
 use iron::prelude::*;
 
-use limiter::BodyLimit;
+use limiter::RequestLimit;
 
 fn index(_: &mut Request) -> IronResult<Response> {
     Ok(Response::with((iron::status::Ok, "Test")))
 }
 
 fn main() {
-    let max_request = BodyLimit::new(5000);
+    let max_request = RequestLimit::new(5000, 50);
     let mut chain = Chain::new(index);
     chain.link_before(max_request);
     Iron::new(chain).http("localhost:3000").unwrap();

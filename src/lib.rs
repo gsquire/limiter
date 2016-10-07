@@ -1,4 +1,5 @@
 extern crate iron;
+extern crate url;
 
 use iron::BeforeMiddleware;
 use iron::headers::ContentLength;
@@ -9,21 +10,22 @@ use std::error::Error;
 use std::fmt;
 use std::io::Read;
 
-// The default is 20 MB.
-const DEFAULT_LIMIT: u64 = 2e7 as u64;
-
 /// The error thrown when the request body size is larger than the limit set
 /// by the middleware.
 #[derive(Debug)]
 pub struct RequestTooLarge;
 
-pub struct BodyLimit {
+pub struct RequestLimit {
+    /// The maximum size of a payload.
     max_body: u64,
+
+    /// The maximum size of a URL.
+    max_url_length: usize,
 }
 
 impl fmt::Display for RequestTooLarge {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("Request body too large.")
+        f.write_str(self.description())
     }
 }
 
@@ -33,57 +35,61 @@ impl Error for RequestTooLarge {
     }
 }
 
-impl BodyLimit {
-    /// Construct a new request body size limiter for Iron.
-    pub fn new(max: u64) -> BodyLimit {
-        if max <= 0 {
-            return BodyLimit { max_body: DEFAULT_LIMIT };
+impl RequestLimit {
+    /// Construct a new request size limiter for Iron.
+    pub fn new(max_body: u64, max_url_length: usize) -> RequestLimit {
+        RequestLimit {
+            max_body: max_body,
+            max_url_length: max_url_length,
         }
-        BodyLimit { max_body: max }
     }
 
     // Set the proper error response if the request body is too big or carry on
     // down the chain.
-    fn check_octets(&self, total: u64) -> IronResult<()> {
+    fn check_payload(&self, total: u64) -> IronResult<()> {
         if total > self.max_body {
             Err(IronError::new(RequestTooLarge, status::PayloadTooLarge))
         } else {
             Ok(())
         }
     }
+
+    // Ensure that the URL length doesn't exceed the maximum.
+    fn check_url_length(&self, u: iron::Url) -> bool {
+        u.into_generic_url().as_str().len() <= self.max_url_length
+    }
 }
 
-impl BeforeMiddleware for BodyLimit {
+impl BeforeMiddleware for RequestLimit {
     // This middleware tries to read the content length of the request first
     // before reading the request body.
     fn before(&self, req: &mut Request) -> IronResult<()> {
-        let length = req.headers.get::<ContentLength>();
-        match length {
-            Some(l) => { self.check_octets(l.0) },
-            None => { self.check_octets(req.body.by_ref().bytes().count() as u64) }
+        if !self.check_url_length(req.url.clone()) {
+            return Err(IronError::new(RequestTooLarge, status::PayloadTooLarge));
+        }
+
+        match req.headers.get::<ContentLength>() {
+            Some(l) => { self.check_payload(l.0) },
+            None => { self.check_payload(req.body.by_ref().bytes().count() as u64) }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::BodyLimit;
+    use super::RequestLimit;
 
-    #[test]
-    fn test_default() {
-        let b = BodyLimit::new(0);
-        assert_eq!(b.max_body, super::DEFAULT_LIMIT);
-    }
+    static URL_MAX: usize = 256;
 
     #[test]
     fn check_ok_response() {
-        let b = BodyLimit::new(5);
-        assert!(b.check_octets(5).is_ok());
+        let b = RequestLimit::new(5, URL_MAX);
+        assert!(b.check_payload(5).is_ok());
     }
 
     #[test]
     fn check_err_response() {
-        let b = BodyLimit::new(1);
-        assert!(b.check_octets(2).is_err());
+        let b = RequestLimit::new(1, URL_MAX);
+        assert!(b.check_payload(2).is_err());
     }
 }

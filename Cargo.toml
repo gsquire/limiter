@@ -9,3 +9,4 @@ license = "MIT"
 
 [dependencies]
 iron = "0.4"
+url = "1.2"
