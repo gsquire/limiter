@@ -1,5 +1,4 @@
 extern crate iron;
-extern crate url;
 
 use iron::BeforeMiddleware;
 use iron::headers::ContentLength;
