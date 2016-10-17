@@ -79,6 +79,7 @@ mod tests {
     use super::RequestLimit;
 
     static URL_MAX: usize = 256;
+    static GOOGLE: &'static str = "https://google.com";
 
     #[test]
     fn check_ok_response() {
@@ -90,5 +91,17 @@ mod tests {
     fn check_err_response() {
         let b = RequestLimit::new(1, URL_MAX);
         assert!(b.check_payload(2).is_err());
+    }
+
+    #[test]
+    fn test_lengthy_url() {
+        let b = RequestLimit::new(1, 10);
+        assert_eq!(false, b.check_url_length(::iron::Url::parse(GOOGLE).unwrap()));
+    }
+
+    #[test]
+    fn test_valid_url() {
+        let b = RequestLimit::new(1, URL_MAX);
+        assert!(b.check_url_length(::iron::Url::parse(GOOGLE).unwrap()));
     }
 }
