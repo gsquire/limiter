@@ -34,7 +34,7 @@ fn index(_: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
-    let max_request = RequestLimit::new(5000, 50);
+    let max_request = RequestLimit::default();
     let mut chain = Chain::new(index);
     chain.link_before(max_request);
     Iron::new(chain).http("localhost:3000").unwrap();
