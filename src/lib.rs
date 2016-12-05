@@ -5,9 +5,13 @@ use iron::headers::ContentLength;
 use iron::prelude::*;
 use iron::status;
 
+use std::default::Default;
 use std::error::Error;
 use std::fmt;
 use std::io::Read;
+
+const MAX_BODY_DEFAULT: u64 = 5e6 as u64;
+const MAX_URL_DEFAULT: usize = 256;
 
 /// The error thrown when the request body size is larger than the limit set
 /// by the middleware.
@@ -34,13 +38,24 @@ impl Error for RequestTooLarge {
     }
 }
 
-impl RequestLimit {
-    /// Construct a new request size limiter for Iron.
-    pub fn new(max_body: u64, max_url_length: usize) -> RequestLimit {
+impl Default for RequestLimit {
+    fn default() -> RequestLimit {
         RequestLimit {
-            max_body: max_body,
-            max_url_length: max_url_length,
+            max_body: MAX_BODY_DEFAULT,
+            max_url_length: MAX_URL_DEFAULT,
         }
+    }
+}
+
+impl RequestLimit {
+    /// set_max_body_size overrides the maximum body request size of 5 MB.
+    pub fn set_max_body_size(&mut self, max_body: u64) {
+        self.max_body = max_body;
+    }
+
+    /// set_max_url_length overrides the default maximum URL length of 256.
+    pub fn set_max_url_length(&mut self, max_url_length: usize) {
+        self.max_url_length = max_url_length;
     }
 
     // Set the proper error response if the request body is too big or carry on
@@ -78,30 +93,31 @@ impl BeforeMiddleware for RequestLimit {
 mod tests {
     use super::RequestLimit;
 
-    static URL_MAX: usize = 256;
     static GOOGLE: &'static str = "https://google.com";
 
     #[test]
     fn check_ok_response() {
-        let b = RequestLimit::new(5, URL_MAX);
+        let b = RequestLimit::default();
         assert!(b.check_payload(5).is_ok());
     }
 
     #[test]
     fn check_err_response() {
-        let b = RequestLimit::new(1, URL_MAX);
+        let mut b = RequestLimit::default();
+        b.set_max_body_size(1);
         assert!(b.check_payload(2).is_err());
     }
 
     #[test]
     fn test_lengthy_url() {
-        let b = RequestLimit::new(1, 10);
+        let mut b = RequestLimit::default();
+        b.set_max_url_length(5);
         assert_eq!(false, b.check_url_length(::iron::Url::parse(GOOGLE).unwrap()));
     }
 
     #[test]
     fn test_valid_url() {
-        let b = RequestLimit::new(1, URL_MAX);
+        let b = RequestLimit::default();
         assert!(b.check_url_length(::iron::Url::parse(GOOGLE).unwrap()));
     }
 }

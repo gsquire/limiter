@@ -13,8 +13,11 @@ Include this in your `Cargo.toml` file:
 
 ```sh
 [dependencies]
-limiter = "0.2"
+limiter = "0.3"
 ```
+
+## Documentation
+https://docs.rs/limiter
 
 ### Example
 
