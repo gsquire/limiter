@@ -1,4 +1,5 @@
 extern crate iron;
+extern crate url;
 
 use iron::BeforeMiddleware;
 use iron::headers::ContentLength;
@@ -18,6 +19,7 @@ const MAX_URL_DEFAULT: usize = 256;
 #[derive(Debug)]
 pub struct RequestTooLarge;
 
+/// `RequestLimit` configures the maximum payload size and URL length for Iron's middleware system.
 pub struct RequestLimit {
     /// The maximum size of a payload.
     max_body: u64,
@@ -70,7 +72,9 @@ impl RequestLimit {
 
     // Ensure that the URL length doesn't exceed the maximum.
     fn check_url_length(&self, u: iron::Url) -> bool {
-        u.into_generic_url().as_str().len() <= self.max_url_length
+        let real_url: url::Url = u.into();
+
+        real_url.as_str().len() <= self.max_url_length
     }
 }
 

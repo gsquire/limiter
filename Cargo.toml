@@ -1,6 +1,6 @@
 [package]
 name = "limiter"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Garrett Squire <garrettsquire@gmail.com>"]
 description = "Request size limiting for the Iron framework"
 repository = "https://github.com/gsquire/limiter"
@@ -9,4 +9,5 @@ keywords = ["iron", "http", "hyper"]
 license = "MIT"
 
 [dependencies]
-iron = "0.4"
+iron = "0.5"
+url = "1.2"
