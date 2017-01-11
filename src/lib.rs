@@ -87,8 +87,8 @@ impl BeforeMiddleware for RequestLimit {
         }
 
         match req.headers.get::<ContentLength>() {
-            Some(l) => { self.check_payload(l.0) },
-            None => { self.check_payload(req.body.by_ref().bytes().count() as u64) }
+            Some(l) => self.check_payload(l.0),
+            None => self.check_payload(req.body.by_ref().bytes().count() as u64),
         }
     }
 }
@@ -116,7 +116,8 @@ mod tests {
     fn test_lengthy_url() {
         let mut b = RequestLimit::default();
         b.set_max_url_length(5);
-        assert_eq!(false, b.check_url_length(::iron::Url::parse(GOOGLE).unwrap()));
+        assert_eq!(false,
+                   b.check_url_length(::iron::Url::parse(GOOGLE).unwrap()));
     }
 
     #[test]
