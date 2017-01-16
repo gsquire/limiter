@@ -1,10 +1,10 @@
 extern crate iron;
-extern crate url;
 
 use iron::BeforeMiddleware;
 use iron::headers::ContentLength;
 use iron::prelude::*;
 use iron::status;
+use iron::url;
 
 use std::default::Default;
 use std::error::Error;
